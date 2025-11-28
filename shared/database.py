@@ -44,11 +44,10 @@ def ensure_database_exists():
         # Create connection URL without database name
         server_url = url.set(database=None)
         
-        # Connect to server (without selecting a database)
+        # Connect to server (without selecting a database) - no timeouts for persistent connection
         temp_engine = create_engine(
             server_url,
             connect_args={
-                "connect_timeout": int(os.getenv("DB_CONNECT_TIMEOUT", "30")),
                 "charset": "utf8mb4",
             },
         )
@@ -69,24 +68,8 @@ def ensure_database_exists():
 
 
 ECHO_SQL = os.getenv("DB_ECHO", "false").lower() == "true"
-POOL_PRE_PING = True
-POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "600"))  # 10 min default for unstable proxy networks
-CONNECT_TIMEOUT = int(os.getenv("DB_CONNECT_TIMEOUT", "30"))
-READ_TIMEOUT = int(os.getenv("DB_READ_TIMEOUT", "60"))
-WRITE_TIMEOUT = int(os.getenv("DB_WRITE_TIMEOUT", "60"))
 
-engine = create_engine(
-    DATABASE_URL,
-    echo=ECHO_SQL,
-    pool_pre_ping=POOL_PRE_PING,
-    pool_recycle=POOL_RECYCLE,
-    connect_args={
-        "connect_timeout": CONNECT_TIMEOUT,
-        "read_timeout": READ_TIMEOUT,
-        "write_timeout": WRITE_TIMEOUT,
-        "charset": "utf8mb4",
-    },
-)
+engine = create_engine(DATABASE_URL, echo=ECHO_SQL)
 
 
 try:

@@ -3,15 +3,18 @@ from flask import Flask, request
 from flask_cors import CORS
 from flasgger import Swagger
 from plant.interfaces.services import plant_blueprint
-from shared.database import engine
+from shared.database import engine, ensure_database_exists
 from plant.infrastructure.models import Base
 
-# Create tables only when explicitly requested via environment variable.
-# In production (Gunicorn) this avoids opening a DB connection at import time
-# which can fail during deployment. To run migrations/manually create tables,
-# set env `RUN_CREATE_ALL=true` temporarily, or use a proper migration tool.
-if os.getenv("RUN_CREATE_ALL", "false").lower() == "true":
+# Ensure database exists and create all tables automatically on startup
+try:
+    print("[app.py] Ensuring database and tables exist...")
+    ensure_database_exists()
     Base.metadata.create_all(bind=engine)
+    print("[app.py] Database and tables ready!")
+except Exception as e:
+    print(f"[app.py] Warning during database setup: {e}")
+    print("[app.py] Continuing anyway - some features may not work until database is ready")
 
 
 app = Flask(__name__)

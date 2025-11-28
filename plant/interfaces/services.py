@@ -13,12 +13,22 @@ def _get_plant_application_service() -> PlantApplicationService:
     Creates and returns an instance of the PlantApplicationService,
     injecting its dependencies.
     """
-    db_session = next(get_db_session())
-    plant_repository = SQLAlchemyPlantRepository(db_session=db_session)
-    plant_service = PlantService()
-    return PlantApplicationService(
-        plant_service=plant_service, plant_repository=plant_repository
-    )
+    # Use the generator properly to ensure cleanup
+    session_gen = get_db_session()
+    db_session = next(session_gen)
+    try:
+        plant_repository = SQLAlchemyPlantRepository(db_session=db_session)
+        plant_service = PlantService()
+        return PlantApplicationService(
+            plant_service=plant_service, plant_repository=plant_repository
+        )
+    except Exception:
+        # Close session on error
+        try:
+            next(session_gen, None)
+        except StopIteration:
+            pass
+        raise
 
 
 @plant_blueprint.route("/plants", methods=["GET"])

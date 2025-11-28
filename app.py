@@ -43,10 +43,11 @@ if swagger_host:
     swagger_config["host"] = swagger_host
 
 # Default basePath and other settings (kept separate to keep diff small)
+# Support both HTTP (local dev) and HTTPS (production on Render)
 swagger_config.update(
     {
         "basePath": "/",
-        "schemes": ["http"],
+        "schemes": ["https", "http"],
         "specs": [
             {
                 "endpoint": "apispec_1",

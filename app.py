@@ -1,11 +1,16 @@
+import os
 from flask import Flask
 from flasgger import Swagger
 from plant.interfaces.services import plant_blueprint
 from shared.database import engine
 from plant.infrastructure.models import Base
 
-# Crear tablas de la base de datos
-Base.metadata.create_all(bind=engine)
+# Create tables only when explicitly requested via environment variable.
+# In production (Gunicorn) this avoids opening a DB connection at import time
+# which can fail during deployment. To run migrations/manually create tables,
+# set env `RUN_CREATE_ALL=true` temporarily, or use a proper migration tool.
+if os.getenv("RUN_CREATE_ALL", "false").lower() == "true":
+    Base.metadata.create_all(bind=engine)
 
 
 app = Flask(__name__)

@@ -1,4 +1,5 @@
 import os
+import re
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -41,13 +42,49 @@ if not DATABASE_URL:
     # Fall back to the remote DB by default
     DATABASE_URL = DEFAULT_REMOTE_DB
 
+# Normalize URL: if someone provided a plain `mysql://` scheme, prefer `pymysql`.
+# This ensures SQLAlchemy uses the pure-Python `pymysql` driver instead of
+# attempting to import `MySQLdb` (which requires `mysqlclient`/MySQLdb C extension).
+if DATABASE_URL.startswith("mysql://"):
+    DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+
+# Some environments or libraries may still try to import `MySQLdb` directly.
+# If `pymysql` is available, install it as a drop-in replacement for `MySQLdb`.
+try:
+    import pymysql
+
+    pymysql.install_as_MySQLdb()
+except Exception:
+    # If pymysql isn't installed, the import will fail. The app should have
+    # `pymysql` in `requirements.txt` for the remote deploy. We'll continue
+    # and let SQLAlchemy raise a clear error if the driver is missing.
+    pass
+
 
 
 # Enable SQLAlchemy echo to log SQL statements for debugging and
 # print the DATABASE_URL so we can confirm which database is being used.
-engine = create_engine(DATABASE_URL, echo=True)
+# Connection options to improve resilience on unstable networked DBs
+ECHO_SQL = os.getenv("DB_ECHO", "false").lower() == "true"
+POOL_PRE_PING = True
+POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "1800"))
+CONNECT_TIMEOUT = int(os.getenv("DB_CONNECT_TIMEOUT", "10"))
 
-print("[shared.database] DATABASE_URL=", DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    echo=ECHO_SQL,
+    pool_pre_ping=POOL_PRE_PING,
+    pool_recycle=POOL_RECYCLE,
+    connect_args={"connect_timeout": CONNECT_TIMEOUT},
+)
+
+# Print a masked DATABASE_URL (hide password) for debugging without leaking secrets
+try:
+    masked = re.sub(r":[^@]+@", ":****@", DATABASE_URL)
+except Exception:
+    masked = DATABASE_URL
+
+print("[shared.database] DATABASE_URL=", masked)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

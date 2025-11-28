@@ -22,15 +22,25 @@ Functions:
 - get_db_session: Provides a database session for use in the application.
 """
 
-# --- Configuración de la Base de Datos lista para Producción ---
+# --- Configuración de la Base de Datos ---
 
-# Usar configuración local por defecto
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "root")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "3306")
-DB_NAME = os.getenv("DB_NAME", "plantabase")
-DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# Priority order for the connection URL:
+# 1. Environment variable `DATABASE_URL` or `DB_URL` (if set)
+# 2. Explicit default remote database provided by the user
+# 3. Local MySQL defaults
+
+# The deployed remote DB you requested (converted to SQLAlchemy format)
+DEFAULT_REMOTE_DB = (
+    "mysql+pymysql://root:ukIivxvkwEVKuxwGkTeEjxcXXoHbusRD@metro.proxy.rlwy.net:14991/railway"
+)
+
+# Allow user to override via environment variables
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL")
+
+if not DATABASE_URL:
+    # Fall back to the remote DB by default
+    DATABASE_URL = DEFAULT_REMOTE_DB
+
 
 
 # Enable SQLAlchemy echo to log SQL statements for debugging and

@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
 from flasgger import Swagger
 from plant.interfaces.services import plant_blueprint
@@ -18,6 +18,15 @@ app = Flask(__name__)
 
 # Enable CORS so the Swagger UI and other origins can call the API from browsers
 CORS(app)
+
+
+@app.before_request
+def log_request_info():
+    try:
+        headers = dict(request.headers)
+    except Exception:
+        headers = {}
+    app.logger.info("Request: %s %s headers=%s", request.method, request.url, headers)
 
 # Configure and initialize Swagger with professional English documentation
 swagger_host = os.getenv("SWAGGER_HOST", "").strip()
@@ -83,4 +92,5 @@ def read_root():
     return "Welcome to the Plant Care Edge Service API"
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Run with an ad-hoc SSL context for local HTTPS (development only)
+    app.run(debug=True, ssl_context='adhoc')

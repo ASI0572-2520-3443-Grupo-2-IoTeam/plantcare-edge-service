@@ -25,24 +25,14 @@ Functions:
 
 # --- Configuración de la Base de Datos ---
 
-# Priority order for the connection URL:
-# 1. Full DATABASE_URL or DB_URL environment variable (if set)
-# 2. Construct from individual MYSQL_* environment variables (Railway standard)
-# 3. Fallback to local MySQL defaults
-
-# Option 1: Use full DATABASE_URL if provided
+# Use only the full `DATABASE_URL` (or `DB_URL`) env var when provided.
+# If not set, fall back to the public Railway URL that you provided.
 DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL")
 
-# Option 2: If not provided, construct from individual Railway env vars
 if not DATABASE_URL:
-    mysql_user = os.getenv("MYSQL_USER") or os.getenv("MYSQLUSER", "root")
-    mysql_password = os.getenv("MYSQL_ROOT_PASSWORD") or os.getenv("MYSQLPASSWORD", "root")
-    mysql_host = os.getenv("MYSQL_PUBLIC_HOST", os.getenv("MYSQLHOST", "localhost"))
-    mysql_port = os.getenv("MYSQL_PUBLIC_PORT", os.getenv("MYSQLPORT", "3306"))
-    mysql_database = os.getenv("MYSQL_DATABASE") or os.getenv("MYSQLDATABASE", "railway")
-    
-    # Construct the URL
-    DATABASE_URL = f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}/{mysql_database}"
+    DATABASE_URL = (
+        "mysql+pymysql://root:ukIivxvkwEVKuxwGkTeEjxcXXoHbusRD@metro.proxy.rlwy.net:14991/railway"
+    )
 
 # Normalize URL: if someone provided a plain `mysql://` scheme, prefer `pymysql`.
 # This ensures SQLAlchemy uses the pure-Python `pymysql` driver instead of

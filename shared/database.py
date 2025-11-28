@@ -31,6 +31,7 @@ Functions:
 # 3. Local MySQL defaults
 
 # The deployed remote DB you requested (converted to SQLAlchemy format)
+# Updated with the correct Railway URL: metro.proxy.rlwy.net:14991
 DEFAULT_REMOTE_DB = (
     "mysql+pymysql://root:ukIivxvkwEVKuxwGkTeEjxcXXoHbusRD@metro.proxy.rlwy.net:14991/railway"
 )
@@ -68,7 +69,7 @@ except Exception:
 ECHO_SQL = os.getenv("DB_ECHO", "false").lower() == "true"
 POOL_PRE_PING = True
 POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "1800"))
-CONNECT_TIMEOUT = int(os.getenv("DB_CONNECT_TIMEOUT", "10"))
+CONNECT_TIMEOUT = int(os.getenv("DB_CONNECT_TIMEOUT", "30"))
 
 engine = create_engine(
     DATABASE_URL,

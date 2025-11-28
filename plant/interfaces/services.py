@@ -47,6 +47,8 @@ def get_all_plants():
           type: array
           items:
             $ref: '#/definitions/Plant'
+      500:
+        description: Database connection error or internal server error.
     definitions:
       Plant:
         type: object
@@ -65,9 +67,14 @@ def get_all_plants():
           soilMoisturePct:
             type: integer
     """
-    plant_application_service = _get_plant_application_service()
-    all_data = plant_application_service.get_all_plant_data()
-    return jsonify(all_data)
+    try:
+        plant_application_service = _get_plant_application_service()
+        all_data = plant_application_service.get_all_plant_data()
+        return jsonify(all_data)
+    except Exception as e:
+        error_msg = f"Database error: {str(e)}"
+        print(f"[ERROR] GET /plants failed: {error_msg}")
+        return jsonify({"error": "Database connection failed", "details": str(e)}), 500
 
 
 @plant_blueprint.route("/plants", methods=["POST"])
@@ -140,17 +147,22 @@ def add_plant_data():
     if not data or not all(k in data for k in required_fields):
         return jsonify({"message": "Invalid JSON or missing required fields."}), 400
 
-    # Map incoming camelCase JSON to the domain's expected snake_case keys
-    mapped_data = {
-      "device_id": data.get("deviceId"),
-      "air_temperature_celsius": data.get("airTemperatureC"),
-      "air_humidity_percent": data.get("airHumidityPct"),
-      "luminosity_lux": data.get("lightIntensityLux"),
-      "soil_moisture_percent": data.get("soilMoisturePct"),
-    }
+    try:
+        # Map incoming camelCase JSON to the domain's expected snake_case keys
+        mapped_data = {
+            "device_id": data.get("deviceId"),
+            "air_temperature_celsius": data.get("airTemperatureC"),
+            "air_humidity_percent": data.get("airHumidityPct"),
+            "luminosity_lux": data.get("lightIntensityLux"),
+            "soil_moisture_percent": data.get("soilMoisturePct"),
+        }
 
-    plant_application_service = _get_plant_application_service()
-    saved_plant_data = plant_application_service.add_plant_data(mapped_data)
+        plant_application_service = _get_plant_application_service()
+        saved_plant_data = plant_application_service.add_plant_data(mapped_data)
 
-    return jsonify(saved_plant_data), 200
+        return jsonify(saved_plant_data), 200
+    except Exception as e:
+        error_msg = f"Database error: {str(e)}"
+        print(f"[ERROR] POST /plants failed: {error_msg}")
+        return jsonify({"error": "Failed to save data", "details": str(e)}), 500
 

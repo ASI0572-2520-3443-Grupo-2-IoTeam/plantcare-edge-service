@@ -69,7 +69,26 @@ def ensure_database_exists():
 
 ECHO_SQL = os.getenv("DB_ECHO", "false").lower() == "true"
 
-engine = create_engine(DATABASE_URL, echo=ECHO_SQL)
+# Connection tuning: prefer verifying connections before use and
+# recycle them periodically to avoid using stale sockets behind proxies.
+POOL_PRE_PING = True
+POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "300"))  # 5 minutes
+CONNECT_TIMEOUT = int(os.getenv("DB_CONNECT_TIMEOUT", "30"))
+READ_TIMEOUT = int(os.getenv("DB_READ_TIMEOUT", "60"))
+WRITE_TIMEOUT = int(os.getenv("DB_WRITE_TIMEOUT", "60"))
+
+engine = create_engine(
+    DATABASE_URL,
+    echo=ECHO_SQL,
+    pool_pre_ping=POOL_PRE_PING,
+    pool_recycle=POOL_RECYCLE,
+    connect_args={
+        "connect_timeout": CONNECT_TIMEOUT,
+        "read_timeout": READ_TIMEOUT,
+        "write_timeout": WRITE_TIMEOUT,
+        "charset": "utf8mb4",
+    },
+)
 
 
 try:

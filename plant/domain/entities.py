@@ -8,7 +8,7 @@ class Plant:
     Represents a plant entity, including the device ID.
     """
     id: int
-    device_id: str  # <-- AÑADIDO
+    device_id: str
     temperature: float
     humidity: float
     light: int

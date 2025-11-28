@@ -15,13 +15,21 @@ class PlantApplicationService:
         """
         Converts a Plant object to a dictionary (DTO) with original field names.
         """
+        # Return DTO in camelCase to match the external JSON contract
+        timestamp = None
+        if getattr(plant, "created_at", None):
+            try:
+                timestamp = plant.created_at.isoformat()
+            except Exception:
+                timestamp = str(plant.created_at)
+
         return {
-            "device_id": plant.device_id,
-            "air_temperature_celsius": plant.temperature,
-            "air_humidity_percent": plant.humidity,
-            "luminosity_lux": plant.light,
-            "soil_moisture_percent": plant.soil_humidity,
-            "created_at": plant.created_at
+            "deviceId": plant.device_id,
+            "timestamp": timestamp,
+            "airTemperatureC": plant.temperature,
+            "airHumidityPct": plant.humidity,
+            "lightIntensityLux": plant.light,
+            "soilMoisturePct": plant.soil_humidity,
         }
 
     def add_plant_data(self, data: dict) -> dict:

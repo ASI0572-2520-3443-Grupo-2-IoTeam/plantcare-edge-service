@@ -29,11 +29,15 @@ DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "root")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
-DB_NAME = os.getenv("DB_NAME", "plant_database")
+DB_NAME = os.getenv("DB_NAME", "plantabase")
 DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 
-engine = create_engine(DATABASE_URL)
+# Enable SQLAlchemy echo to log SQL statements for debugging and
+# print the DATABASE_URL so we can confirm which database is being used.
+engine = create_engine(DATABASE_URL, echo=True)
+
+print("[shared.database] DATABASE_URL=", DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

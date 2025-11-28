@@ -16,6 +16,8 @@ if os.getenv("RUN_CREATE_ALL", "false").lower() == "true":
 app = Flask(__name__)
 
 # Configure and initialize Swagger with professional English documentation
+swagger_host = os.getenv("SWAGGER_HOST", "").strip()
+
 swagger_config = {
     "swagger": "2.0",
     "info": {
@@ -27,22 +29,34 @@ swagger_config = {
             "email": "support@plantcare.com",
         },
     },
-    "host": "127.0.0.1:5000",  # Ensure this matches your running host and port
-    "basePath": "/",  # Base path for all endpoints
-    "schemes": ["http"],  # Use "https" if your app runs on HTTPS
-    "specs": [
-        {
-            "endpoint": "apispec_1",
-            "route": "/apispec_1.json",
-            "rule_filter": lambda rule: True,  # Include all endpoints
-            "model_filter": lambda tag: True,  # Include all models
-        }
-    ],
-    "headers": [],  # Ensure headers key is defined as an empty list
-    "static_url_path": "/flasgger_static",  # Default static files path
-    "swagger_ui": True,  # Enable Swagger UI
-    "specs_route": "/apidocs/",  # Route where Swagger UI is available
-}
+    }
+
+    # If a specific host is provided via env, include it; otherwise let Flasgger
+    # use the request host (avoid hardcoding `127.0.0.1:5000` which breaks Try-it-out
+    # when the UI is served from a remote host).
+    if swagger_host:
+        swagger_config["host"] = swagger_host
+    else:
+        # do not set `host` key so Flasgger uses the current origin
+        pass
+
+    # Default basePath and other settings (kept separate to keep diff small)
+    swagger_config.update({
+        "basePath": "/",
+        "schemes": ["http"],
+        "specs": [
+            {
+                "endpoint": "apispec_1",
+                "route": "/apispec_1.json",
+                "rule_filter": lambda rule: True,
+                "model_filter": lambda tag: True,
+            }
+        ],
+        "headers": [],
+        "static_url_path": "/flasgger_static",
+        "swagger_ui": True,
+        "specs_route": "/apidocs/",
+    })
 
 # Initialize Swagger with the updated configuration
 swagger = Swagger(app, config=swagger_config)

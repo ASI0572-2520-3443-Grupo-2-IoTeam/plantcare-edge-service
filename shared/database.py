@@ -31,7 +31,7 @@ DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL")
 
 if not DATABASE_URL:
     DATABASE_URL = (
-        "mysql+pymysql://root:ukIivxvkwEVKuxwGkTeEjxcXXoHbusRD@metro.proxy.rlwy.net:14991/railway"
+        "mysql://root:RXXtpcEhPqTRhqzOuXvWQCedlaVWTjIn@maglev.proxy.rlwy.net:29969/railway"
     )
 
 # Normalize URL: if someone provided a plain `mysql://` scheme, prefer `pymysql`.

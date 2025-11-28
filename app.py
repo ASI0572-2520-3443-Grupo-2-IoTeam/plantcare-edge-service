@@ -26,40 +26,41 @@ swagger_config = {
     "swagger": "2.0",
     "info": {
         "title": "Plant Care Edge Service API Documentation",
-        "description": "This API allows you to manage and monitor plant data, including temperature, humidity, light, and soil moisture levels. It is designed for IoT devices like ESP32 to send sensor data.",
+        "description": (
+            "This API allows you to manage and monitor plant data, including "
+            "temperature, humidity, light, and soil moisture levels. It is "
+            "designed for IoT devices like ESP32 to send sensor data."
+        ),
         "version": "1.0.0",
-        "contact": {
-            "name": "Plant Care Support",
-            "email": "support@plantcare.com",
-        },
-    }
+        "contact": {"name": "Plant Care Support", "email": "support@plantcare.com"},
+    },
+}
 
 # If a specific host is provided via env, include it; otherwise let Flasgger
 # use the request host (avoid hardcoding `127.0.0.1:5000` which breaks Try-it-out
 # when the UI is served from a remote host).
 if swagger_host:
     swagger_config["host"] = swagger_host
-else:
-    # do not set `host` key so Flasgger uses the current origin
-    pass
 
 # Default basePath and other settings (kept separate to keep diff small)
-swagger_config.update({
-    "basePath": "/",
-    "schemes": ["http"],
-    "specs": [
-        {
-            "endpoint": "apispec_1",
-            "route": "/apispec_1.json",
-            "rule_filter": lambda rule: True,
-            "model_filter": lambda tag: True,
-        }
-    ],
-    "headers": [],
-    "static_url_path": "/flasgger_static",
-    "swagger_ui": True,
-    "specs_route": "/apidocs/",
-})
+swagger_config.update(
+    {
+        "basePath": "/",
+        "schemes": ["http"],
+        "specs": [
+            {
+                "endpoint": "apispec_1",
+                "route": "/apispec_1.json",
+                "rule_filter": lambda rule: True,
+                "model_filter": lambda tag: True,
+            }
+        ],
+        "headers": [],
+        "static_url_path": "/flasgger_static",
+        "swagger_ui": True,
+        "specs_route": "/apidocs/",
+    }
+)
 
 # Initialize Swagger with the updated configuration
 swagger = Swagger(app, config=swagger_config)

@@ -82,6 +82,9 @@ engine = create_engine(
     echo=ECHO_SQL,
     pool_pre_ping=POOL_PRE_PING,
     pool_recycle=POOL_RECYCLE,
+    pool_size=20,  # Increase from default 5 to handle more concurrent requests
+    max_overflow=30,  # Increase from default 10 to allow more overflow connections
+    pool_timeout=30,  # Wait up to 30 seconds for a connection
     connect_args={
         "connect_timeout": CONNECT_TIMEOUT,
         "read_timeout": READ_TIMEOUT,

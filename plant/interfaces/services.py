@@ -8,29 +8,6 @@ from shared.database import get_db_session
 plant_blueprint = Blueprint("plant", __name__)
 
 
-def _get_plant_application_service() -> PlantApplicationService:
-    """
-    Creates and returns an instance of the PlantApplicationService,
-    injecting its dependencies.
-    """
-    # Use the generator properly to ensure cleanup
-    session_gen = get_db_session()
-    db_session = next(session_gen)
-    try:
-        plant_repository = SQLAlchemyPlantRepository(db_session=db_session)
-        plant_service = PlantService()
-        return PlantApplicationService(
-            plant_service=plant_service, plant_repository=plant_repository
-        )
-    except Exception:
-        # Close session on error
-        try:
-            next(session_gen, None)
-        except StopIteration:
-            pass
-        raise
-
-
 @plant_blueprint.route("/plants", methods=["GET"])
 def get_all_plants():
     """
@@ -67,14 +44,28 @@ def get_all_plants():
           soilMoisturePct:
             type: integer
     """
+    session_gen = get_db_session()
+    db_session = None
     try:
-        plant_application_service = _get_plant_application_service()
+        db_session = next(session_gen)
+        plant_repository = SQLAlchemyPlantRepository(db_session=db_session)
+        plant_service = PlantService()
+        plant_application_service = PlantApplicationService(
+            plant_service=plant_service, plant_repository=plant_repository
+        )
         all_data = plant_application_service.get_all_plant_data()
         return jsonify(all_data)
     except Exception as e:
         error_msg = f"Database error: {str(e)}"
         print(f"[ERROR] GET /plants failed: {error_msg}")
         return jsonify({"error": "Database connection failed", "details": str(e)}), 500
+    finally:
+        # CRITICAL: Always close the session to return connection to pool
+        if db_session is not None:
+            try:
+                next(session_gen, None)
+            except StopIteration:
+                pass
 
 
 @plant_blueprint.route("/plants", methods=["POST"])
@@ -147,7 +138,11 @@ def add_plant_data():
     if not data or not all(k in data for k in required_fields):
         return jsonify({"message": "Invalid JSON or missing required fields."}), 400
 
+    session_gen = get_db_session()
+    db_session = None
     try:
+        db_session = next(session_gen)
+        
         # Map incoming camelCase JSON to the domain's expected snake_case keys
         mapped_data = {
             "device_id": data.get("deviceId"),
@@ -157,7 +152,11 @@ def add_plant_data():
             "soil_moisture_percent": data.get("soilMoisturePct"),
         }
 
-        plant_application_service = _get_plant_application_service()
+        plant_repository = SQLAlchemyPlantRepository(db_session=db_session)
+        plant_service = PlantService()
+        plant_application_service = PlantApplicationService(
+            plant_service=plant_service, plant_repository=plant_repository
+        )
         saved_plant_data = plant_application_service.add_plant_data(mapped_data)
 
         return jsonify(saved_plant_data), 200
@@ -165,4 +164,11 @@ def add_plant_data():
         error_msg = f"Database error: {str(e)}"
         print(f"[ERROR] POST /plants failed: {error_msg}")
         return jsonify({"error": "Failed to save data", "details": str(e)}), 500
+    finally:
+        # CRITICAL: Always close the session to return connection to pool
+        if db_session is not None:
+            try:
+                next(session_gen, None)
+            except StopIteration:
+                pass
 
